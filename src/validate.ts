@@ -444,7 +444,7 @@ function validateKeySchema(key: string, config: KeyConfiguration) {
 	const ensureFieldSet = (fieldName: string, value: unknown, why: string) =>
 		fieldMustBeSet(key, fieldName, value, why);
 
-	ensureFieldSet("schema.type", schema?.type, "; field is required");
+	ensureFieldSet("schema.type", schema?.type, "- field is required");
 
 	if (!schema.is_optional) {
 		const reason = "if schema.is_optional is false";
@@ -497,6 +497,10 @@ function validateKeySchema(key: string, config: KeyConfiguration) {
 	}
 
 	if (schema.type === "object") {
+		// Check recursive fields inside the nested Schema
+		if (schema.object_schema) {
+			validateSchema(schema.object_schema);
+		}
 		const reason = "if schema.type is number";
 		ensureFieldNotSet("schema.enum", schema?.enum, reason);
 		ensureFieldNotSet("validation.min", validation?.min, reason);
