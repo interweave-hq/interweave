@@ -81,13 +81,6 @@ function validateKeyConfiguration(
 	config: KeyConfiguration,
 	fullValueObject: object
 ) {
-	// Ensure type is specified
-	if (!config?.schema?.type) {
-		throwError(
-			`Key '${key}' is missing a spcified type in ${key}.schema.type.`
-		);
-	}
-
 	// Make sure required keys have a value
 	if (!config.schema.is_optional) {
 		if (value === null || value === undefined || value === "") {
@@ -450,6 +443,8 @@ function validateKeySchema(key: string, config: KeyConfiguration) {
 	) => fieldMustNotBeSet(key, fieldName, value, why);
 	const ensureFieldSet = (fieldName: string, value: unknown, why: string) =>
 		fieldMustBeSet(key, fieldName, value, why);
+
+	ensureFieldSet("schema.type", schema?.type, "; field is required");
 
 	if (!schema.is_optional) {
 		const reason = "if schema.is_optional is false";
