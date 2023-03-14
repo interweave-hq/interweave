@@ -210,7 +210,6 @@ export interface Request {
 }
 
 export interface Schema {
-	// queries: object;
 	keys: {
 		[key: string]: KeyConfiguration;
 	};

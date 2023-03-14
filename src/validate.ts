@@ -81,6 +81,13 @@ function validateKeyConfiguration(
 	config: KeyConfiguration,
 	fullValueObject: object
 ) {
+	// Ensure type is specified
+	if (!config?.schema?.type) {
+		throwError(
+			`Key '${key}' is missing a spcified type in ${key}.schema.type.`
+		);
+	}
+
 	// Make sure required keys have a value
 	if (!config.schema.is_optional) {
 		if (value === null || value === undefined || value === "") {
