@@ -411,9 +411,7 @@ function fieldMustBeSet(
 		value === "" ||
 		value === false
 	) {
-		return throwError(
-			`'${fieldName}' must not be set in key '${key}' ${why}.`
-		);
+		return throwError(`'${fieldName}' must be set in key '${key}' ${why}.`);
 	}
 	return true;
 }
