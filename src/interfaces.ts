@@ -213,10 +213,12 @@ export interface Request {
 	error_path?: string;
 }
 
+export interface SchemaKeys {
+	[key: string]: KeyConfiguration;
+}
+
 export interface Schema {
-	keys: {
-		[key: string]: KeyConfiguration;
-	};
+	keys: SchemaKeys;
 	/**
 	 * Instructions for utilizing this data via the API
 	 */
