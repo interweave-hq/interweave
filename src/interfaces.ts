@@ -14,9 +14,6 @@ type ValidationOption<T> =
 	  };
 
 export interface KeyConfiguration {
-	form?: {
-		out_key?: string;
-	};
 	schema: {
 		// We need to expand this to support more DB types
 		// Coordinates, DateTime, Time, Float, Integer
@@ -114,7 +111,12 @@ export interface KeyConfiguration {
 		 * Attributes to spread onto the element
 		 * Do we want this...?
 		 */
-		attributes?: {
+		form?: {
+			/**
+			 * Key to use in the body of the sent request
+			 * Overrides the default key
+			 */
+			out_key?: string;
 			/**
 			 * Helper text to render near the input element
 			 */
@@ -135,6 +137,8 @@ export interface KeyConfiguration {
 			icon?: string;
 			/**
 			 * Whether to hide this element from the interface
+			 * Hiding the element in the form will skip its validation client-side
+			 * Useful for fields that get set server-side like `id`
 			 */
 			hidden?: boolean;
 			/**
