@@ -1,5 +1,5 @@
 import { type Schema } from "./interfaces";
-import { validateSchema } from "./validate";
+import { validateSchema } from "./validateSchema";
 
 const API_URL = "https://api.interweave.studio/api/v1/projects";
 const BUILD_INTERFACE_URL = ({ projectId }: { projectId: string }) =>

@@ -1,31 +1,39 @@
+import { isEmpty, isValuePresent } from "./helpers";
 import { type Schema, type KeyConfiguration } from "./interfaces";
 
 const throwError = (err: string) => {
 	throw new Error(`${err}`);
 };
 
-function get(object: object, path: string, defaultValue = null): any {
-	// Convert dot notation to bracket notation
-	path = path.replace(/\[(\w+)\]/g, ".$1");
-	path = path.replace(/^\./, "");
+interface ValidateOptions {
+	/**
+	 * Whether to return an object of keys and their errors
+	 */
+	returnErrors?: boolean;
+	/**
+	 * recursive
+	 */
+	recursiveOpts?: {
+		/**
+		 * Errors object for recursively handling the store
+		 */
+		errorsObj?: ErrorsReturnObject;
+		/**
+		 * Path of the key
+		 */
+		path?: string;
+	};
+}
+export type ExternalValidateOptions = Omit<ValidateOptions, "recursiveOpts">;
 
-	// Split path into an array of keys
-	const keys = path.split(".");
-
-	// Iterate over the keys to retrieve the value
-	let result = object;
-	for (const key of keys) {
-		if (
-			result != null &&
-			Object.prototype.hasOwnProperty.call(result, key)
-		) {
-			result = result[key as keyof typeof result];
-		} else {
-			return defaultValue;
-		}
-	}
-
-	return result === undefined ? defaultValue : result;
+export interface ErrorsReturnObject {
+	didError: boolean;
+	keys: {
+		[key: string]: {
+			errors: string[];
+			requiredAndMissing?: boolean;
+		};
+	};
 }
 
 // obj will be the object we're testing
@@ -33,7 +41,8 @@ function get(object: object, path: string, defaultValue = null): any {
 export function validate(
 	obj: { [key: string]: any },
 	schema: Schema,
-	fullValueObject?: { [key: string]: any }
+	fullValueObject?: { [key: string]: any },
+	opts?: ValidateOptions
 ) {
 	const schemaKeys = Object.keys(schema.keys);
 	const requiredKeys = schemaKeys.filter(
@@ -41,50 +50,166 @@ export function validate(
 	);
 	const objectKeys = Object.keys(obj);
 
+	// Handle storing all errors
+	// This object doesn't get passed around but the function that sets this does
+	// We pass the errors object back and forth to maintain the store as we pass through recursive steps
+	const errorsReturnObject: ErrorsReturnObject = opts?.recursiveOpts
+		?.errorsObj
+		? opts.recursiveOpts.errorsObj
+		: {
+				didError: false,
+				keys: {},
+		  };
+
+	// Controls setting the errors in our store
+	const setErrorInReturnObject = (
+		/**
+		 * Key to set in the object
+		 */
+		key: string,
+		/**
+		 * Error that was encountered
+		 */
+		err: string,
+		/**
+		 * Whether or not this field was required AND missing
+		 * This will help us control frontend errors
+		 */
+		requiredAndMissing?: boolean
+	) => {
+		// Let it be known that this validation has failed
+		errorsReturnObject.didError = true;
+
+		// Set to an object if the key doesn't have anything set yet
+		if (typeof errorsReturnObject.keys[key] !== "object") {
+			errorsReturnObject.keys[key] = {
+				errors: [],
+				requiredAndMissing: false,
+			};
+		}
+		// Shorten access to path
+		// Can't move this above becuase we get yelled at for resetting a const
+		const fieldInErrorObject = errorsReturnObject.keys[key];
+
+		// Keep track of the missing required field
+		if (requiredAndMissing) {
+			fieldInErrorObject.requiredAndMissing = true;
+		}
+
+		// Add the error to the errors array
+		// Set the errors array if no array exists yet
+		if (fieldInErrorObject.errors) {
+			fieldInErrorObject.errors.push(err);
+		} else {
+			fieldInErrorObject.errors = [err];
+		}
+		return;
+	};
+	const errorFn = opts?.returnErrors ? setErrorInReturnObject : throwError;
+
 	// Check to make sure each required key is present
+	// In general, it sucks that we have to put the function here
+	// It'd serve much better not here, but we won't have access to the full Schema in the function below
+	// Some fields may not be present, so we have to loop through the schema looking for missing keys
+	// Can't do that in reverse
 	requiredKeys.forEach((k) => {
-		if (!objectKeys.includes(k)) {
-			throwError(`Missing required key '${k}' in supplied object.`);
+		const val = obj[k];
+		if (isEmpty(val)) {
+			const errString = `Missing required key '${k}' in supplied object.`;
+			const targetKey = opts?.recursiveOpts?.path
+				? `${opts?.recursiveOpts?.path}.${k}`
+				: k;
+			if (opts?.returnErrors) {
+				errorFn(targetKey, errString, true);
+			} else {
+				throwError(errString);
+			}
 		}
 	});
 
+	// Specify the wider object so that we may properly look for dependent fields
+	// This will be the full object, NOT a subset as we move recursively through
 	const determinedFullValueObject = fullValueObject ? fullValueObject : obj;
 
 	// Validate each key and its value
 	objectKeys.forEach((k) => {
 		const schemaConfig = schema.keys[k];
 		const value = obj[k];
+		/**
+		 * Target key is how we handle nested keys so we can give a proper error
+		 * We combine via the .
+		 * So an object like { parent: { nested: Schema } }
+		 * Will produce the key in the errorObj: parent.nested
+		 */
+		const targetKey = opts?.recursiveOpts?.path
+			? `${opts?.recursiveOpts?.path}.${k}`
+			: k;
+
 		validateKeyConfiguration(
-			k,
+			/**
+			 * Target key will be the name / key
+			 */
+			targetKey,
+			/**
+			 * Value from our value object
+			 */
 			value,
+			/**
+			 * Schema will be the schema config for this interface
+			 */
 			schemaConfig,
-			determinedFullValueObject
+			/**
+			 * Full value object will be used for validating dependent fields
+			 * Like the emptyIfPresent etc, they need to know the full value object
+			 */
+			determinedFullValueObject,
+			{
+				/**
+				 * Pass the target key and the error in
+				 */
+				onError: (err) => errorFn(targetKey, err),
+				/**
+				 * Keep the same errors object floating back and forth so we handle recursive object checks with the same obj
+				 */
+				recursiveOpts: {
+					errorsObj: errorsReturnObject,
+				},
+			}
 		);
 	});
+
+	if (opts?.returnErrors) {
+		return errorsReturnObject;
+	}
 }
 
-const isValuePresent = (fullObject: object, target: string) => {
-	// Deep parse
-	const value = get(fullObject, target);
-	return !(typeof value === "undefined" || value === null || value === "");
-};
-
+interface ValidateKeyConfigurationOptions {
+	onError?: (err: string) => any;
+	recursiveOpts?: {
+		path?: string;
+		errorsObj?: ErrorsReturnObject;
+	};
+}
 /**
  *
  * Purely for checking the validity of the supplied object
  * NOT the supplied configuration
  * at this point we assume the configuration is correct
  */
-function validateKeyConfiguration(
+export function validateKeyConfiguration(
 	key: string,
 	value: any,
 	config: KeyConfiguration,
-	fullValueObject: object
+	fullValueObject: object,
+	opts?: ValidateKeyConfigurationOptions
 ) {
+	// Override error function
+	const error = opts?.onError || throwError;
+
 	// Make sure required keys have a value
 	if (!config.schema.is_optional) {
 		if (value === null || value === undefined || value === "") {
-			throwError(
+			error(
 				`Key '${key}' is a required field, but no value was received.`
 			);
 		}
@@ -99,7 +224,7 @@ function validateKeyConfiguration(
 				.filter((v) => v === true);
 			const allPresent = values.length === arr.length;
 			if (allPresent && !value) {
-				throwError(
+				error(
 					`Key ${key} must have a value if keys ${arr.join(
 						", "
 					)} are present, received ${value}.`
@@ -115,7 +240,7 @@ function validateKeyConfiguration(
 				.filter((v) => v === true);
 			const anyPresent = values.length > 0;
 			if (anyPresent && !value) {
-				throwError(
+				error(
 					`Key ${key} must have a value if any of the keys ${arr.join(
 						", "
 					)} are present, received ${value}.`
@@ -131,7 +256,7 @@ function validateKeyConfiguration(
 				.filter((v) => v === true);
 			const anyEmpty = values.length !== arr.length;
 			if (anyEmpty && !value) {
-				throwError(
+				error(
 					`Key ${key} must have a value if any of the keys ${arr.join(
 						", "
 					)} are empty, received ${value}.`
@@ -148,7 +273,7 @@ function validateKeyConfiguration(
 				.filter((v) => v === true);
 			const allEmpty = values.length === 0;
 			if (allEmpty && !value) {
-				throwError(
+				error(
 					`Key ${key} must have a value if all of the keys ${ensurePresentIfAllEmpty.join(
 						", "
 					)} are empty, received ${value}.`
@@ -164,7 +289,7 @@ function validateKeyConfiguration(
 				.filter((v) => v === true);
 			const noneEmpty = values.length === arr.length;
 			if (noneEmpty && !value) {
-				throwError(
+				error(
 					`Key ${key} must have a value if none of the keys ${arr.join(
 						", "
 					)} are empty, received ${value}.`
@@ -174,41 +299,49 @@ function validateKeyConfiguration(
 	}
 
 	// If it's optional and not present, lets move on
-	if (
-		config.schema.is_optional &&
-		(typeof value === "undefined" || value === null)
-	) {
+	if (config.schema.is_optional && isEmpty(value)) {
 		return true;
 	}
 
 	// Make sure value is an array if it was specified
-	if (config.schema.is_array) {
+	const expectsArray = config.schema.is_array;
+	if (expectsArray) {
 		if (!Array.isArray(value)) {
-			throwError(
+			error(
 				`Key '${key}' was specified as an array field, but no array was received.`
 			);
 		}
 	}
 
 	// Make sure value objects are configured correctly
-	if (config.schema.type !== typeof value) {
-		throwError(
-			`Key '${key}' was specified as type ${
-				config.schema.type
-			} but received ${typeof value}.`
+	const validArrayType = expectsArray && Array.isArray(value);
+	if (config.schema.type !== typeof value && !validArrayType) {
+		const schemaType = expectsArray ? "array" : config.schema.type;
+		// Handle config.schema saying array instad of object
+		error(
+			`Key '${key}' was specified as type ${schemaType} but received ${typeof value}.`
 		);
 	}
 
 	// Make sure objects and their keys obey the rules
 	if (config.schema.type === "object") {
 		// Exclamation point because we assume a correct configuration
-		validate(value, config.schema.object_schema!, fullValueObject);
+		const path = opts?.recursiveOpts?.path
+			? `${opts?.recursiveOpts?.path}.${key}`
+			: key;
+		validate(value, config.schema.object_schema!, fullValueObject, {
+			recursiveOpts: {
+				path,
+				errorsObj: opts?.recursiveOpts?.errorsObj,
+			},
+			returnErrors: true,
+		});
 	}
 
 	// Make sure value is part of the enum if supplied
 	if (config.schema.enum) {
 		if (config.schema.enum.length === 0 && value) {
-			throwError(
+			error(
 				`Key ${key} specified an enum with no values, preventing this value from being set. Please delete the enum field, add values to the enum, or make sure this key is null or undefined.`
 			);
 		}
@@ -218,12 +351,12 @@ function validateKeyConfiguration(
 				// Not sure why we have to check twice
 				if (config.schema.enum) {
 					if (!(config.schema.enum as any[]).includes(v)) {
-						throwError(
+						error(
 							`Value '${v}' specified in array for key '${key}' is not an allowed value according to the supplied enum.`
 						);
 					}
 					if (config.schema.enum.length === 0 && value.length > 0) {
-						throwError(
+						error(
 							`Key ${key} specified an enum with no values, preventing this value from being set. Please delete the enum field, add values to the enum, or make sure this key is null or undefined.`
 						);
 					}
@@ -231,7 +364,7 @@ function validateKeyConfiguration(
 			});
 		}
 		if (!(config.schema.enum as any[]).includes(value)) {
-			throwError(
+			error(
 				`Key '${key}' expected a specfic value from the specified enum. Instead received '${value}'.`
 			);
 		}
@@ -243,14 +376,14 @@ function validateKeyConfiguration(
 		if (config.schema.type === "number") {
 			if (config.validation.min) {
 				if (value < config.validation.min) {
-					throwError(
+					error(
 						`Key '${key}' has a minimum value of '${config.validation.min}' but received '${value}'.`
 					);
 				}
 			}
 			if (config.validation.max) {
 				if (value > config.validation.max) {
-					throwError(
+					error(
 						`Key '${key}' has a maximum value of '${config.validation.max}' but received '${value}'.`
 					);
 				}
@@ -260,22 +393,22 @@ function validateKeyConfiguration(
 		// STRING and ARRAY validations
 		if (config.schema.type === "string" || Array.isArray(value)) {
 			if (config.validation.length) {
-				if (value.length !== config.validation.length) {
-					throwError(
+				if (value?.length !== config.validation.length) {
+					error(
 						`Key '${key}' should have an exact length of ${config.validation.length}, but received ${value.length}.`
 					);
 				}
 			}
 			if (config.validation.max_length) {
-				if (value.length > config.validation.max_length) {
-					throwError(
+				if (value?.length > config.validation.max_length) {
+					error(
 						`Key '${key}' should not exceed a length of ${config.validation.max_length}, but received ${value.length}.`
 					);
 				}
 			}
 			if (config.validation.min_length) {
-				if (value.length < config.validation.min_length) {
-					throwError(
+				if (value?.length < config.validation.min_length) {
+					error(
 						`Key '${key}' should not have a length less than ${config.validation.max_length}, but received ${value.length}.`
 					);
 				}
@@ -284,14 +417,14 @@ function validateKeyConfiguration(
 
 		if (config.validation.equals) {
 			if (value !== config.validation.equals) {
-				throwError(
+				error(
 					`Key '${key}' should equal '${config.validation.equals}'.`
 				);
 			}
 		}
 		if (config.validation.is_not) {
 			if (value === config.validation.equals) {
-				throwError(
+				error(
 					`Key '${key}' should not equal '${config.validation.is_not}'.`
 				);
 			}
@@ -300,26 +433,22 @@ function validateKeyConfiguration(
 		if (config.validation.is_email) {
 			// Make sure there is a . and an @
 			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-				throwError(
+				error(
 					`Key '${key}' was specified to be an email but received '${value}'.`
 				);
 			}
 			// Make sure the @ comes before the .
-			if (value.indexOf("@") > value.indexOf(".")) {
-				throwError(
-					`Key '${key}' was passed an invalid email '${value}'.`
-				);
+			if (value?.indexOf("@") > value?.indexOf(".")) {
+				error(`Key '${key}' was passed an invalid email '${value}'.`);
 			}
-			const domain = value.substring(
-				value.indexOf("@") + 1,
-				value.lastIndexOf(".")
+			const domain = value?.substring(
+				value?.indexOf("@") + 1,
+				value?.lastIndexOf(".")
 			);
-			const tld = value.substring(value.lastIndexOf(".") + 1);
+			const tld = value?.substring(value?.lastIndexOf(".") + 1);
 			// No characters in between @ and .
 			if (!domain) {
-				throwError(
-					`Key '${key}' was passed an invalid email '${value}'.`
-				);
+				error(`Key '${key}' was passed an invalid email '${value}'.`);
 			}
 			if (typeof config.validation.is_email === "object") {
 				if (config.validation.is_email?.forbidden_domains) {
@@ -328,7 +457,7 @@ function validateKeyConfiguration(
 							domain
 						)
 					) {
-						throwError(
+						error(
 							`Key '${key}' was passed an email with a forbidden domain '${domain}'.`
 						);
 					}
@@ -337,7 +466,7 @@ function validateKeyConfiguration(
 					if (
 						config.validation.is_email?.forbidden_tlds.includes(tld)
 					) {
-						throwError(
+						error(
 							`Key '${key}' was passed an email with an invalid TLD '${tld}'.`
 						);
 					}
@@ -349,14 +478,14 @@ function validateKeyConfiguration(
 			if (typeof config.validation.is_phone === "object") {
 				if (config.validation.is_phone.include_country_code) {
 					if (!/^\+?\d+$/.test(value) || value.charAt(0) !== "+") {
-						throwError(
+						error(
 							`Phone number must be a string consisting of numbers and a country code denoted with a '+' at the beginning, received '${value}'.`
 						);
 					}
 				}
 			} else {
 				if (!/^\d+$/.test(value)) {
-					throwError(
+					error(
 						`Phone number must be a string consisting only of numbers, received '${value}'.`
 					);
 				}
@@ -364,179 +493,5 @@ function validateKeyConfiguration(
 		}
 	}
 
-	return true;
-}
-
-function fieldMustNotBeSet(
-	key: string,
-	fieldName: string,
-	value: unknown,
-	why: string
-) {
-	if (Array.isArray(value)) {
-		if (value.length > 0) {
-			return throwError(
-				`'${fieldName}' must not be set in key '${key}' ${why}.`
-			);
-		}
-		return true;
-	}
-	if (
-		typeof value === "undefined" ||
-		value === null ||
-		value === "" ||
-		value === false
-	) {
-		return true;
-	}
-	return throwError(`'${fieldName}' must not be set in key '${key}' ${why}.`);
-}
-
-function fieldMustBeSet(
-	key: string,
-	fieldName: string,
-	value: unknown,
-	why: string
-) {
-	if (Array.isArray(value)) {
-		if (value.length <= 0) {
-			return throwError(
-				`'${fieldName}' must be set in key '${key}' ${why}.`
-			);
-		}
-	}
-	if (
-		typeof value === "undefined" ||
-		value === null ||
-		value === "" ||
-		value === false
-	) {
-		return throwError(`'${fieldName}' must be set in key '${key}' ${why}.`);
-	}
-	return true;
-}
-
-/**
- * Recursively traverse an object's keys and ensure each is okay
- */
-export function validateSchema(schema: Schema) {
-	// Loop through each key and validate its schema
-	for (const [k, keySchema] of Object.entries(schema.keys)) {
-		validateKeySchema(k, keySchema);
-	}
-	return true;
-}
-
-/**
- * Function we can check a keys configuration object
- */
-function validateKeySchema(key: string, config: KeyConfiguration) {
-	const { schema, validation } = config;
-
-	// Lets set the key so we don't have to keep doing it
-	const ensureFieldNotSet = (
-		fieldName: string,
-		value: unknown,
-		why: string
-	) => fieldMustNotBeSet(key, fieldName, value, why);
-	const ensureFieldSet = (fieldName: string, value: unknown, why: string) =>
-		fieldMustBeSet(key, fieldName, value, why);
-
-	ensureFieldSet("schema.type", schema?.type, "- field is required");
-
-	if (!schema.is_optional) {
-		const reason = "if schema.is_optional is false";
-		ensureFieldNotSet(
-			"validation.ensure_empty_if_any_present",
-			validation?.ensure_empty_if_any_present,
-			reason
-		);
-		ensureFieldNotSet(
-			"validation.ensure_empty_if_all_present",
-			validation?.ensure_empty_if_all_present,
-			reason
-		);
-		ensureFieldNotSet(
-			"validation.ensure_empty_if_all_empty",
-			validation?.ensure_empty_if_all_empty,
-			reason
-		);
-		ensureFieldNotSet(
-			"validation.ensure_empty_if_any_empty",
-			validation?.ensure_empty_if_any_empty,
-			reason
-		);
-		ensureFieldNotSet(
-			"validation.ensure_empty_if_none_empty",
-			validation?.ensure_empty_if_none_empty,
-			reason
-		);
-	}
-
-	if (schema.type === "string") {
-		const reason = "if schema.type is string";
-		ensureFieldNotSet("validation.min", validation?.min, reason);
-		ensureFieldNotSet("validation.max", validation?.max, reason);
-	}
-
-	if (schema.type === "number") {
-		const reason = "if schema.type is number";
-		ensureFieldNotSet("validation.is_email", validation?.is_email, reason);
-		if (typeof validation?.is_phone !== "undefined") {
-			if (typeof validation.is_phone === "object") {
-				ensureFieldNotSet(
-					"validation.is_phone.include_country_code",
-					validation?.is_phone?.include_country_code,
-					reason
-				);
-			}
-		}
-		ensureFieldNotSet("validation.is_phone", validation?.is_phone, reason);
-	}
-
-	if (schema.type === "object") {
-		// Check recursive fields inside the nested Schema
-		if (schema.object_schema) {
-			validateSchema(schema.object_schema);
-		}
-		const reason = "if schema.type is number";
-		ensureFieldNotSet("schema.enum", schema?.enum, reason);
-		ensureFieldNotSet("validation.min", validation?.min, reason);
-		ensureFieldNotSet("validation.max", validation?.max, reason);
-		ensureFieldNotSet("validation.equals", validation?.equals, reason);
-		ensureFieldNotSet("validation.is_email", validation?.is_email, reason);
-		ensureFieldNotSet("validation.is_phone", validation?.is_phone, reason);
-		ensureFieldSet("schema.object_schema", schema?.object_schema, reason);
-	}
-
-	if (schema.type === "boolean") {
-		const reason = "if schema.type is boolean";
-		ensureFieldNotSet("schema.enum", schema?.enum, reason);
-		ensureFieldNotSet("validation.min", validation?.min, reason);
-		ensureFieldNotSet("validation.max", validation?.max, reason);
-		ensureFieldNotSet("validation.is_email", validation?.is_email, reason);
-		ensureFieldNotSet("validation.is_phone", validation?.is_phone, reason);
-	}
-
-	// Let's make sure the default value obeys our rules
-	if (schema.default_value) {
-		validateKeyConfiguration(key, schema.default_value, config, {});
-	}
-
-	// length, min_length, and max_length only available on strings and arrays
-	if (schema.type !== "string" && !schema.is_array) {
-		const reason = "if type isn't string and is not an array";
-		ensureFieldNotSet("validation.length", validation?.length, reason);
-		ensureFieldNotSet(
-			"validation.min_length",
-			validation?.min_length,
-			reason
-		);
-		ensureFieldNotSet(
-			"validation.max_length",
-			validation?.max_length,
-			reason
-		);
-	}
 	return true;
 }
