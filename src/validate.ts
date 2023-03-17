@@ -10,6 +10,12 @@ interface ValidateOptions {
 	 * Whether to return an object of keys and their errors
 	 */
 	returnErrors?: boolean;
+
+	/**
+	 * Specify the wider object so that we may properly look for dependent fields
+	 */
+	fullValueObject?: Record<string, unknown>;
+
 	/**
 	 * recursive
 	 */
@@ -41,7 +47,6 @@ export interface ErrorsReturnObject {
 export function validate(
 	obj: { [key: string]: any },
 	schema: Schema,
-	fullValueObject?: { [key: string]: any },
 	opts?: ValidateOptions
 ) {
 	const schemaKeys = Object.keys(schema.keys);
@@ -129,7 +134,9 @@ export function validate(
 
 	// Specify the wider object so that we may properly look for dependent fields
 	// This will be the full object, NOT a subset as we move recursively through
-	const determinedFullValueObject = fullValueObject ? fullValueObject : obj;
+	const determinedFullValueObject = opts?.fullValueObject
+		? opts?.fullValueObject
+		: obj;
 
 	// Validate each key and its value
 	objectKeys.forEach((k) => {
@@ -200,7 +207,7 @@ export function validateKeyConfiguration(
 	key: string,
 	value: any,
 	config: KeyConfiguration,
-	fullValueObject: object,
+	fullValueObject: Record<string, unknown>,
 	opts?: ValidateKeyConfigurationOptions
 ) {
 	// Override error function
@@ -329,12 +336,13 @@ export function validateKeyConfiguration(
 		const path = opts?.recursiveOpts?.path
 			? `${opts?.recursiveOpts?.path}.${key}`
 			: key;
-		validate(value, config.schema.object_schema!, fullValueObject, {
+		validate(value, config.schema.object_schema!, {
 			recursiveOpts: {
 				path,
 				errorsObj: opts?.recursiveOpts?.errorsObj,
 			},
 			returnErrors: true,
+			fullValueObject: fullValueObject,
 		});
 	}
 
