@@ -51,7 +51,10 @@ export function validate(
 ) {
 	const schemaKeys = Object.keys(schema.keys);
 	const requiredKeys = schemaKeys.filter(
-		(k) => !schema.keys[k].schema.is_optional
+		(k) =>
+			!schema.keys[k].schema.is_optional &&
+			// Hiding the form element disables validation
+			!schema.keys[k].interface?.form?.hidden
 	);
 	const objectKeys = Object.keys(obj);
 
@@ -212,6 +215,11 @@ export function validateKeyConfiguration(
 ) {
 	// Override error function
 	const error = opts?.onError || throwError;
+
+	// Hiding the field in a form removes it from the validation cycle
+	if (config?.interface?.form?.hidden) {
+		return true;
+	}
 
 	// Make sure required keys have a value
 	if (!config.schema.is_optional) {
