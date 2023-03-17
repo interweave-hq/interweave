@@ -334,7 +334,9 @@ export function validateKeyConfiguration(
 		const schemaType = expectsArray ? "array" : config.schema.type;
 		// Handle config.schema saying array instad of object
 		error(
-			`Key '${key}' was specified as type ${schemaType} but received ${typeof value}.`
+			`Key '${key}' was specified as type ${schemaType} but received ${
+				Array.isArray(value) ? "array" : typeof value
+			}.`
 		);
 	}
 
@@ -379,10 +381,13 @@ export function validateKeyConfiguration(
 				}
 			});
 		}
-		if (!(config.schema.enum as any[]).includes(value)) {
-			error(
-				`Key '${key}' expected a specfic value from the specified enum. Instead received '${value}'.`
-			);
+
+		if (!Array.isArray(value)) {
+			if (!(config.schema.enum as any[]).includes(value)) {
+				error(
+					`Key '${key}' expected a specfic value from the specified enum. Instead received '${value}'.`
+				);
+			}
 		}
 	}
 
