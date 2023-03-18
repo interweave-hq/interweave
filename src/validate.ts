@@ -420,18 +420,31 @@ export function validateKeyConfiguration(
 					);
 				}
 			}
-			if (config.validation.max_length) {
-				if (value?.length > config.validation.max_length) {
+			// Handle friendly error if both are present
+			// Let's give them a range to work with
+			if (config.validation.min_length && config.validation.max_length) {
+				if (
+					value?.length < config.validation.min_length ||
+					value?.length > config.validation.max_length
+				) {
 					error(
-						`Key '${key}' should not exceed a length of ${config.validation.max_length}, but received ${value.length}.`
+						`Key '${key}' should have a length between ${config.validation.min_length} and ${config.validation.max_length} characters, but received ${value.length} characters.`
 					);
 				}
-			}
-			if (config.validation.min_length) {
-				if (value?.length < config.validation.min_length) {
-					error(
-						`Key '${key}' should not have a length less than ${config.validation.max_length}, but received ${value.length}.`
-					);
+			} else {
+				if (config.validation.max_length) {
+					if (value?.length > config.validation.max_length) {
+						error(
+							`Key '${key}' should not exceed a length of ${config.validation.max_length}, but received ${value.length}.`
+						);
+					}
+				}
+				if (config.validation.min_length) {
+					if (value?.length < config.validation.min_length) {
+						error(
+							`Key '${key}' should not have a length less than ${config.validation.min_length}, but received ${value.length}.`
+						);
+					}
 				}
 			}
 		}
