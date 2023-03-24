@@ -106,7 +106,7 @@ export interface KeyConfiguration {
 		 * Pre-defined interface elements
 		 * Can we expand to allow interface element type here?
 		 */
-		element?: string;
+		// component?: string;
 		/**
 		 * Attributes to spread onto the element
 		 * Do we want this...?
@@ -134,7 +134,7 @@ export interface KeyConfiguration {
 			 * Icon to render with this component, if it can
 			 * Type should be an enum of our supported icons
 			 */
-			icon?: string;
+			// icon?: string;
 			/**
 			 * Whether to hide this element from the interface
 			 * Hiding the element in the form will skip its validation client-side
@@ -145,6 +145,30 @@ export interface KeyConfiguration {
 			 * Whether a user can interact with this element or not
 			 */
 			disabled?: boolean;
+			/**
+			 * Initial data to populate the component with
+			 * for dropdowns, selects, mutliselects, etc
+			 * NOT default value for the input
+			 * Used for populating dropdowns with result of a request
+			 * Value from request and data_path should be an array
+			 * if the possible values is a small enough dataset, consider using schema.enum
+			 */
+			options?: {
+				/**
+				 * The source of the data
+				 */
+				data: any[] | Request;
+				/**
+				 * The unique identifier per entry
+				 * Useful if the data is an array of objects
+				 */
+				value_path?: string;
+				/**
+				 * The label to display in a dropdown
+				 * Useful if the data is an array of objects
+				 */
+				label_path?: string;
+			};
 		};
 		/**
 		 * Settings to render the table
@@ -161,31 +185,10 @@ export interface KeyConfiguration {
 			/**
 			 * How to render this field in the table
 			 */
-			rendered_as?: "image";
-		};
-		/**
-		 * Initial data to populate the component with
-		 * NOT default value for the input
-		 * Used for populating dropdowns with result of a request
-		 * Value from request and data_path should be an array
-		 * if the possible values is a small enough dataset, consider using schema.enum
-		 */
-		component_data?: {
-			/**
-			 * The unique identifier per entry
-			 */
-			value_path: string;
-			/**
-			 * The label to display in a dropdown
-			 */
-			label_path: string;
-			/**
-			 * The source of the data
-			 */
-			data: Request;
+			// rendered_as?: "image";
 		};
 	};
-	custom_fields?: {
+	plugins?: {
 		[key: string]: string | boolean | Record<string, unknown>;
 	};
 }
