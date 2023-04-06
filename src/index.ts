@@ -5,6 +5,7 @@ import {
 	type Error,
 	type SchemaKeys,
 	type Permissions,
+	type PermissionValue,
 	type Users,
 } from "./interfaces";
 import {
@@ -23,6 +24,7 @@ export {
 	type Error,
 	type SchemaKeys,
 	type Permissions,
+	type PermissionValue,
 	type Users,
 	// From validate()
 	type ValidateOptions,

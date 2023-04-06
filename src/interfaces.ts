@@ -266,4 +266,5 @@ export type Users = {
 	email: string;
 	permissions?: Permissions;
 }[];
-export type Permissions = "Create" | "Read" | "Update" | "Delete" | "All"[];
+export type PermissionValue = "Create" | "Read" | "Update" | "Delete" | "All";
+export type Permissions = PermissionValue[];
