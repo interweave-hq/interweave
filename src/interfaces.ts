@@ -214,6 +214,11 @@ export interface Request {
 	 * https://lodash.com/docs/4.17.15#get
 	 */
 	error_path?: string;
+
+	/**
+	 * If the request fails and error_path is empty, use this as the message
+	 */
+	default_error?: string;
 }
 
 export interface SchemaKeys {
@@ -231,4 +236,34 @@ export interface Schema {
 		delete?: Request;
 		update?: Request;
 	};
+	access?: {
+		/**
+		 * Privacy of this interface.
+		 * Below is who has access with each setting:
+		 * Private - only the creator
+		 * Unlisted - anyone with the link
+		 * Public - anyone
+		 * DomainRestricted - anyone with the same organizational domain as you plus anyone inside users array
+		 * InviteRestricted - anyone inside users array
+		 */
+		privacy?:
+			| "Private"
+			| "Unlisted"
+			| "Public"
+			| "DomainRestricted"
+			| "InviteRestricted";
+		/**
+		 * Default permissions to those who have access
+		 */
+		default_permissions?: Permissions;
+		/**
+		 * Users you want to have access
+		 */
+		users?: {
+			email: string;
+			permissions?: Permissions;
+		}[];
+	};
 }
+
+export type Permissions = "Create" | "Read" | "Update" | "Delete" | "All"[];
