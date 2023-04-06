@@ -106,7 +106,7 @@ export interface KeyConfiguration {
 		 * Pre-defined interface elements
 		 * Can we expand to allow interface element type here?
 		 */
-		element?: string;
+		// component?: string;
 		/**
 		 * Attributes to spread onto the element
 		 * Do we want this...?
@@ -134,7 +134,7 @@ export interface KeyConfiguration {
 			 * Icon to render with this component, if it can
 			 * Type should be an enum of our supported icons
 			 */
-			icon?: string;
+			// icon?: string;
 			/**
 			 * Whether to hide this element from the interface
 			 * Hiding the element in the form will skip its validation client-side
@@ -145,6 +145,30 @@ export interface KeyConfiguration {
 			 * Whether a user can interact with this element or not
 			 */
 			disabled?: boolean;
+			/**
+			 * Initial data to populate the component with
+			 * for dropdowns, selects, mutliselects, etc
+			 * NOT default value for the input
+			 * Used for populating dropdowns with result of a request
+			 * Value from request and data_path should be an array
+			 * if the possible values is a small enough dataset, consider using schema.enum
+			 */
+			options?: {
+				/**
+				 * The source of the data
+				 */
+				data: any[] | Request;
+				/**
+				 * The unique identifier per entry
+				 * Useful if the data is an array of objects
+				 */
+				value_path?: string;
+				/**
+				 * The label to display in a dropdown
+				 * Useful if the data is an array of objects
+				 */
+				label_path?: string;
+			};
 		};
 		/**
 		 * Settings to render the table
@@ -161,31 +185,10 @@ export interface KeyConfiguration {
 			/**
 			 * How to render this field in the table
 			 */
-			rendered_as?: "image";
-		};
-		/**
-		 * Initial data to populate the component with
-		 * NOT default value for the input
-		 * Used for populating dropdowns with result of a request
-		 * Value from request and data_path should be an array
-		 * if the possible values is a small enough dataset, consider using schema.enum
-		 */
-		component_data?: {
-			/**
-			 * The unique identifier per entry
-			 */
-			value_path: string;
-			/**
-			 * The label to display in a dropdown
-			 */
-			label_path: string;
-			/**
-			 * The source of the data
-			 */
-			data: Request;
+			// rendered_as?: "image";
 		};
 	};
-	custom_fields?: {
+	plugins?: {
 		[key: string]: string | boolean | Record<string, unknown>;
 	};
 }
@@ -211,6 +214,11 @@ export interface Request {
 	 * https://lodash.com/docs/4.17.15#get
 	 */
 	error_path?: string;
+
+	/**
+	 * If the request fails and error_path is empty, use this as the message
+	 */
+	default_error?: string;
 }
 
 export interface SchemaKeys {
@@ -228,4 +236,34 @@ export interface Schema {
 		delete?: Request;
 		update?: Request;
 	};
+	access?: {
+		/**
+		 * Privacy of this interface.
+		 * Below is who has access with each setting:
+		 * Private - only the creator
+		 * Unlisted - anyone with the link
+		 * Public - anyone
+		 * DomainRestricted - anyone with the same organizational domain as you plus anyone inside users array
+		 * InviteRestricted - anyone inside users array
+		 */
+		privacy?:
+			| "Private"
+			| "Unlisted"
+			| "Public"
+			| "DomainRestricted"
+			| "InviteRestricted";
+		/**
+		 * Default permissions to those who have access
+		 */
+		default_permissions?: Permissions;
+		/**
+		 * Users you want to have access
+		 */
+		users?: {
+			email: string;
+			permissions?: Permissions;
+		}[];
+	};
 }
+
+export type Permissions = "Create" | "Read" | "Update" | "Delete" | "All"[];
