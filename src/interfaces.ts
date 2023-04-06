@@ -259,11 +259,11 @@ export interface Schema {
 		/**
 		 * Users you want to have access
 		 */
-		users?: {
-			email: string;
-			permissions?: Permissions;
-		}[];
+		users?: Users;
 	};
 }
-
+export type Users = {
+	email: string;
+	permissions?: Permissions;
+}[];
 export type Permissions = "Create" | "Read" | "Update" | "Delete" | "All"[];

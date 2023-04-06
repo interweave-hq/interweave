@@ -4,6 +4,8 @@ import {
 	type Request,
 	type Error,
 	type SchemaKeys,
+	type Permissions,
+	type Users,
 } from "./interfaces";
 import {
 	validate,
@@ -20,6 +22,8 @@ export {
 	type Request,
 	type Error,
 	type SchemaKeys,
+	type Permissions,
+	type Users,
 	// From validate()
 	type ValidateOptions,
 	type ErrorsReturnObject,
