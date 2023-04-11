@@ -7,6 +7,7 @@ import {
 	type Permissions,
 	type PermissionValue,
 	type Users,
+	type DataSource,
 } from "./interfaces";
 import {
 	validate,
@@ -26,6 +27,7 @@ export {
 	type Permissions,
 	type PermissionValue,
 	type Users,
+	type DataSource,
 	// From validate()
 	type ValidateOptions,
 	type ErrorsReturnObject,
