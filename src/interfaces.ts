@@ -235,6 +235,30 @@ export interface Request {
 				default_value?: any;
 			};
 
+			interface?: {
+				form?: {
+					/**
+					 * User-friendly name for the key
+					 * Will render on the form and the table's column
+					 */
+					label?: string;
+					/**
+					 * Placeholder text to render on the element
+					 */
+					placeholder?: string;
+					/**
+					 * Whether to hide this element from the interface
+					 * Hiding the element in the form will skip its validation client-side
+					 * Useful for fields that get set server-side like `id`
+					 */
+					hidden?: boolean;
+					/**
+					 * Whether a user can interact with this element or not
+					 */
+					disabled?: boolean;
+				};
+			};
+
 			options?: {
 				/**
 				 * The source of the data
