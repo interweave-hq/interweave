@@ -226,56 +226,56 @@ export interface Request {
 		 * Keys _not_ specified in the URL will be appended as query parameters
 		 * for example, a key of location will be appended as ?location=value
 		 */
-		[key: string]: {
-			schema: {
-				type: "string" | "number" | "boolean";
-				is_optional?: boolean;
-				is_array?: boolean;
-				enum?: string[] | number[];
-				default_value?: any;
-			};
+		[key: string]: Parameter;
+	};
+}
 
-			interface?: {
-				form?: {
-					/**
-					 * User-friendly name for the key
-					 * Will render on the form and the table's column
-					 */
-					label?: string;
-					/**
-					 * Placeholder text to render on the element
-					 */
-					placeholder?: string;
-					/**
-					 * Whether to hide this element from the interface
-					 * Hiding the element in the form will skip its validation client-side
-					 * Useful for fields that get set server-side like `id`
-					 */
-					hidden?: boolean;
-					/**
-					 * Whether a user can interact with this element or not
-					 */
-					disabled?: boolean;
-				};
-			};
+export interface Parameter {
+	schema: {
+		type: "string" | "number" | "boolean";
+		is_optional?: boolean;
+		is_array?: boolean;
+		enum?: string[] | number[];
+		default_value?: any;
+	};
 
-			options?: {
-				/**
-				 * The source of the data
-				 */
-				data: DataSource;
-				/**
-				 * The unique identifier per entry
-				 * Useful if the data is an array of objects
-				 */
-				value_path?: string;
-				/**
-				 * The label to display in a dropdown
-				 * Useful if the data is an array of objects
-				 */
-				label_path?: string;
-			};
+	interface?: {
+		form?: {
+			/**
+			 * User-friendly name for the key
+			 * Will render on the form and the table's column
+			 */
+			label?: string;
+			/**
+			 * Placeholder text to render on the element
+			 */
+			placeholder?: string;
+			/**
+			 * Text that will render near the input to provide context.
+			 */
+			description?: string;
+			/**
+			 * Whether a user can interact with this element or not
+			 */
+			disabled?: boolean;
 		};
+	};
+
+	options?: {
+		/**
+		 * The source of the data
+		 */
+		data: DataSource;
+		/**
+		 * The unique identifier per entry
+		 * Useful if the data is an array of objects
+		 */
+		value_path?: string;
+		/**
+		 * The label to display in a dropdown
+		 * Useful if the data is an array of objects
+		 */
+		label_path?: string;
 	};
 }
 

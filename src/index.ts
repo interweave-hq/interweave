@@ -8,6 +8,7 @@ import {
 	type PermissionValue,
 	type Users,
 	type DataSource,
+	type Parameter,
 } from "./interfaces";
 import {
 	validate,
@@ -28,6 +29,7 @@ export {
 	type PermissionValue,
 	type Users,
 	type DataSource,
+	type Parameter,
 	// From validate()
 	type ValidateOptions,
 	type ErrorsReturnObject,
