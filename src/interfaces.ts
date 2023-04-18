@@ -294,6 +294,9 @@ export interface Schema {
 		delete?: Request;
 		update?: Request;
 	};
+	/**
+	 * Control who has access to this interface
+	 */
 	access?: {
 		/**
 		 * Privacy of this interface.
@@ -318,6 +321,31 @@ export interface Schema {
 		 * Users you want to have access
 		 */
 		users?: Users;
+	};
+	/**
+	 * Specify authorization flows required to access your API
+	 */
+	authorization?: {
+		/**
+		 * Keys are project scoped.
+		 * Any interfaces within the project that specify this key will refer to the first saved token found for a given user
+		 */
+		[key: string]: {
+			/**
+			 * Trigger a modal asking for the token
+			 */
+			type: "token";
+			/**
+			 * Headers object to modify a Request that uses this authorization key
+			 */
+			headers?: {
+				/**
+				 * Token variable is accessible in the value by wrapping the word token in braces.
+				 * So a key:value pair here of `'authorization': 'Bearer {token}'` will produce the expected result of `Bearer xzy123`.
+				 */
+				[headerName: string]: string;
+			};
+		};
 	};
 }
 export type Users = {
