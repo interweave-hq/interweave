@@ -228,6 +228,10 @@ export interface Request {
 		 */
 		[key: string]: Parameter;
 	};
+	/**
+	 * If a Request requires authentication, specify a key from the interface authentication object
+	 */
+	authentication_key?: string;
 }
 
 export interface Parameter {
@@ -325,7 +329,7 @@ export interface Schema {
 	/**
 	 * Specify authorization flows required to access your API
 	 */
-	authorization?: {
+	authentication?: {
 		/**
 		 * Keys are project scoped.
 		 * Any interfaces within the project that specify this key will refer to the first saved token found for a given user
@@ -344,6 +348,31 @@ export interface Schema {
 				 * So a key:value pair here of `'authorization': 'Bearer {token}'` will produce the expected result of `Bearer xzy123`.
 				 */
 				[headerName: string]: string;
+			};
+			/**
+			 * Customize what gets rendered in the modal
+			 */
+			interface: {
+				/**
+				 * Title in the modal
+				 */
+				title?: string;
+				/**
+				 * Label for the input
+				 */
+				label?: string;
+				/**
+				 * Placeholder text for the input
+				 */
+				placeholder?: string;
+				/**
+				 * Text to add context about what is needed here
+				 */
+				description?: string;
+				/**
+				 * Link to provide more instructions about obtaining this key
+				 */
+				instructions_link?: string;
 			};
 		};
 	};
