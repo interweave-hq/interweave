@@ -352,7 +352,7 @@ export interface Schema {
 			/**
 			 * Customize what gets rendered in the modal
 			 */
-			interface: {
+			interface?: {
 				/**
 				 * Title in the modal
 				 */
