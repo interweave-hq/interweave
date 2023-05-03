@@ -25,7 +25,7 @@ export interface KeyConfiguration {
 		// extend?: KeyConfiguration;
 		// omit?: string[];
 		// partial?: string[];
-		enum?: string[] | number[];
+		enum?: DataSource;
 		default_value?: any;
 	};
 	validation?: {
@@ -103,6 +103,11 @@ export interface KeyConfiguration {
 	 */
 	interface?: {
 		/**
+		 * User-friendly name for the key
+		 * Will render on the form and the table's column
+		 */
+		label?: string;
+		/**
 		 * Pre-defined interface elements
 		 * Can we expand to allow interface element type here?
 		 */
@@ -122,11 +127,6 @@ export interface KeyConfiguration {
 			 */
 			description?: string;
 			/**
-			 * User-friendly name for the key
-			 * Will render on the form and the table's column
-			 */
-			label?: string;
-			/**
 			 * Placeholder text to render on the element
 			 */
 			placeholder?: string;
@@ -145,30 +145,6 @@ export interface KeyConfiguration {
 			 * Whether a user can interact with this element or not
 			 */
 			disabled?: boolean;
-			/**
-			 * Initial data to populate the component with
-			 * for dropdowns, selects, mutliselects, etc
-			 * NOT default value for the input
-			 * Used for populating dropdowns with result of a request
-			 * Value from request and data_path should be an array
-			 * if the possible values is a small enough dataset, consider using schema.enum
-			 */
-			options?: {
-				/**
-				 * The source of the data
-				 */
-				data: DataSource;
-				/**
-				 * The unique identifier per entry
-				 * Useful if the data is an array of objects
-				 */
-				value_path?: string;
-				/**
-				 * The label to display in a dropdown
-				 * Useful if the data is an array of objects
-				 */
-				label_path?: string;
-			};
 		};
 		/**
 		 * Settings to render the table
@@ -193,12 +169,27 @@ export interface KeyConfiguration {
 	};
 }
 
+/**
+ * We'll automatically send the formData as the request body unless dontSendFormDataAsBody is false
+ */
 export interface Request {
+	/**
+	 * Filled with variable state
+	 */
 	uri: string;
+	/**
+	 * HTTP Method to use with the request
+	 */
 	http_method: "GET" | "POST" | "DELETE" | "PATCH" | "PUT";
+	/**
+	 * Headers to attach to the request. Variables are accessible in this object.
+	 */
 	headers?: {
 		[key: string]: string;
 	};
+	/**
+	 * Body to send with the request. Variables are accessible in this object.
+	 */
 	body?: {
 		[key: string]: string;
 	};
@@ -230,8 +221,42 @@ export interface Request {
 	};
 	/**
 	 * If a Request requires authentication, specify a key from the interface authentication object
+	 * If the key is not found in this interfaces' authentication object, it'll look for another the key
+	 * within another interface within this same project
 	 */
 	authentication_key?: string;
+	/**
+	 * This will prevent the form data from sending with POST, PATCH, and PUT requests
+	 */
+	skip_body_attachment?: boolean;
+	/**
+	 * If this is to dynamically fill an enum at run-time, this will be the option's value populated in the
+	 * Select or MultiSelect component.
+	 *
+	 * This find operation will occur on every entry within the returned array. If the Request and `data_path` parse doesn't return
+	 * an array, the procedure will fail.
+	 *
+	 * Here is an example: your request returns an object `{ status: 200, results: [{ title: 'Example 1', id: 1 }, { title: 'Example 1', id: 1 }] }`.
+	 * In your request, you'd specify a `data_path` of  `results` to return the array: `[{ title: 'Example 1', id: 1 }, { title: 'Example 1', id: 1 }]`.
+	 * Then to populate a Select, element, you specify `id` as the `value_path` and `title` as the label path.
+	 * This will produce a Select dropdown with two options, "Example 1" and "Example 2", each with their corresponding ids underneath.
+	 * https://lodash.com/docs/4.17.15#get
+	 */
+	value_path?: string;
+	/**
+	 * If this is to dynamically fill an enum at run-time, this will be the option's label populated in the
+	 * Select or MultiSelect component.
+	 *
+	 * This find operation will occur on every entry within the returned array. If the Request and `data_path` parse doesn't return
+	 * an array, the procedure will fail.
+	 *
+	 * Here is an example: your request returns an object `{ status: 200, results: [{ title: 'Example 1', id: 1 }, { title: 'Example 1', id: 1 }] }`.
+	 * In your request, you'd specify a `data_path` of  `results` to return the array: `[{ title: 'Example 1', id: 1 }, { title: 'Example 1', id: 1 }]`.
+	 * Then to populate a Select, element, you specify `id` as the `value_path` and `title` as the label path.
+	 * This will produce a Select dropdown with two options, "Example 1" and "Example 2", each with their corresponding ids underneath.
+	 * https://lodash.com/docs/4.17.15#get
+	 */
+	label_path?: string;
 }
 
 export interface Parameter {
@@ -384,4 +409,4 @@ export type Users = {
 export type PermissionValue = "Create" | "Read" | "Update" | "Delete" | "All";
 export type Permissions = PermissionValue[];
 
-export type DataSource = Request | any[];
+export type DataSource = Request | string[] | number[];
