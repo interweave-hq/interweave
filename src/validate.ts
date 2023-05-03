@@ -358,35 +358,43 @@ export function validateKeyConfiguration(
 
 	// Make sure value is part of the enum if supplied
 	if (config.schema.enum) {
-		if (config.schema.enum.length === 0 && value) {
-			error(
-				`Key ${key} specified an enum with no values, preventing this value from being set. Please delete the enum field, add values to the enum, or make sure this key is null or undefined.`
-			);
-		}
-		// Lets make sure all the values in the array are in the enum
-		if (Array.isArray(value)) {
-			value.forEach((v) => {
-				// Not sure why we have to check twice
-				if (config.schema.enum) {
-					if (!(config.schema.enum as any[]).includes(v)) {
-						error(
-							`Value '${v}' specified in array for key '${key}' is not an allowed value according to the supplied enum.`
-						);
-					}
-					if (config.schema.enum.length === 0 && value.length > 0) {
-						error(
-							`Key ${key} specified an enum with no values, preventing this value from being set. Please delete the enum field, add values to the enum, or make sure this key is null or undefined.`
-						);
-					}
-				}
-			});
-		}
-
-		if (!Array.isArray(value)) {
-			if (!(config.schema.enum as any[]).includes(value)) {
+		if (Array.isArray(config.schema.enum)) {
+			if (config.schema.enum.length === 0 && value) {
 				error(
-					`Key '${key}' expected a specfic value from the specified enum. Instead received '${value}'.`
+					`Key ${key} specified an enum with no values, preventing this value from being set. Please delete the enum field, add values to the enum, or make sure this key is null or undefined.`
 				);
+			}
+			// Lets make sure all the values in the array are in the enum
+			if (Array.isArray(value)) {
+				value.forEach((v) => {
+					// Not sure why we have to check twice
+					if (
+						config.schema.enum &&
+						Array.isArray(config.schema.enum)
+					) {
+						// @ts-expect-error
+						if (!config.schema.enum.includes(v)) {
+							error(
+								`Value '${v}' specified in array for key '${key}' is not an allowed value according to the supplied enum.`
+							);
+						}
+						if (
+							config.schema.enum.length === 0 &&
+							value.length > 0
+						) {
+							error(
+								`Key ${key} specified an enum with no values, preventing this value from being set. Please delete the enum field, add values to the enum, or make sure this key is null or undefined.`
+							);
+						}
+					}
+				});
+			}
+			if (!Array.isArray(value)) {
+				if (!(config.schema.enum as any[]).includes(value)) {
+					error(
+						`Key '${key}' expected a specfic value from the specified enum. Instead received '${value}'.`
+					);
+				}
 			}
 		}
 	}
