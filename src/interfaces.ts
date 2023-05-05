@@ -25,7 +25,11 @@ export interface KeyConfiguration {
 		// extend?: KeyConfiguration;
 		// omit?: string[];
 		// partial?: string[];
-		enum?: DataSource;
+		enum?: StaticDataSource;
+		/**
+		 * A dynamic enum allows a request to be made to populate a Select or MultiSelect element
+		 */
+		dynamic_enum?: Request;
 		default_value?: any;
 	};
 	validation?: {
@@ -409,4 +413,9 @@ export type Users = {
 export type PermissionValue = "Create" | "Read" | "Update" | "Delete" | "All";
 export type Permissions = PermissionValue[];
 
-export type DataSource = Request | string[] | number[];
+export type StaticDataSource =
+	| string[]
+	| number[]
+	| { value: string; label?: string }[];
+
+export type DataSource = Request | StaticDataSource;
