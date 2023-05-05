@@ -9,6 +9,7 @@ import {
 	type Users,
 	type DataSource,
 	type Parameter,
+	type StaticDataSource,
 } from "./interfaces";
 import {
 	validate,
@@ -33,5 +34,6 @@ export {
 	// From validate()
 	type ValidateOptions,
 	type ErrorsReturnObject,
+	type StaticDataSource,
 };
 export { buildInterface, validate, validateSchema };
