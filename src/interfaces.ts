@@ -268,7 +268,8 @@ export interface Parameter {
 		type: "string" | "number" | "boolean";
 		is_optional?: boolean;
 		is_array?: boolean;
-		enum?: string[] | number[];
+		enum?: StaticDataSource;
+		dynamic_enum?: Request;
 		default_value?: any;
 	};
 
@@ -416,6 +417,6 @@ export type Permissions = PermissionValue[];
 export type StaticDataSource =
 	| string[]
 	| number[]
-	| { value: string; label?: string }[];
+	| { value: string | number; label?: string | number }[];
 
 export type DataSource = Request | StaticDataSource;
