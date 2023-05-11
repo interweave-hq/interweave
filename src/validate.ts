@@ -29,6 +29,10 @@ interface ValidateOptions {
 		 */
 		path?: string;
 	};
+	/**
+	 * Schema object to assist with
+	 */
+	fullSchema?: Schema;
 }
 export type ExternalValidateOptions = Omit<ValidateOptions, "recursiveOpts">;
 
@@ -123,6 +127,15 @@ export function validate(
 	requiredKeys.forEach((k) => {
 		const val = obj[k];
 		if (isEmpty(val)) {
+			// Check to make sure if there is an outKey specified, and that there is a value present
+			const potentialOutKey = schema.keys[k].interface?.form?.out_key;
+			if (potentialOutKey) {
+				const newVal = obj[potentialOutKey];
+				if (!isEmpty(newVal)) {
+					return;
+				}
+			}
+
 			const errString = `Missing required key '${k}' in supplied object.`;
 			const targetKey = opts?.recursiveOpts?.path
 				? `${opts?.recursiveOpts?.path}.${k}`
@@ -143,8 +156,9 @@ export function validate(
 
 	// Validate each key and its value
 	objectKeys.forEach((k) => {
-		const schemaConfig = schema.keys[k];
-		const value = obj[k];
+		let outKey = null;
+		let schemaConfig = schema.keys[k];
+
 		/**
 		 * Target key is how we handle nested keys so we can give a proper error
 		 * We combine via the .
@@ -154,6 +168,25 @@ export function validate(
 		const targetKey = opts?.recursiveOpts?.path
 			? `${opts?.recursiveOpts?.path}.${k}`
 			: k;
+
+		/**
+		 * If they use an outKey, the key won't match a schemaConfig
+		 * So let's try to manually find it based on the outKey
+		 */
+		if (!schemaConfig) {
+			// If you can't find the key config, look for the outKey
+			const keysArr = Object.keys(schema.keys);
+			const correctKey = keysArr.find(
+				(k) => schema.keys[k].interface?.form?.out_key === k
+			);
+			if (!correctKey) {
+				return;
+			}
+			outKey = schema.keys[correctKey].interface?.form?.out_key;
+			schemaConfig = schema.keys[correctKey];
+		}
+
+		const value = outKey ? obj[outKey] : obj[k];
 
 		validateKeyConfiguration(
 			/**
