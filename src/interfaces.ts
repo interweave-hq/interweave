@@ -189,13 +189,13 @@ export interface Request {
 	 * Headers to attach to the request. Variables are accessible in this object.
 	 */
 	headers?: {
-		[key: string]: string;
+		[key: string]: string | number | boolean;
 	};
 	/**
 	 * Body to send with the request. Variables are accessible in this object.
 	 */
 	body?: {
-		[key: string]: string;
+		[key: string]: string | number | boolean;
 	};
 	/**
 	 * Where we want to pull data from
