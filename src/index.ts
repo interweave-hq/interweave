@@ -10,6 +10,7 @@ import {
 	type DataSource,
 	type Parameter,
 	type StaticDataSource,
+	type FieldType,
 } from "./interfaces";
 import {
 	validate,
@@ -35,5 +36,6 @@ export {
 	type ValidateOptions,
 	type ErrorsReturnObject,
 	type StaticDataSource,
+	type FieldType,
 };
 export { buildInterface, validate, validateSchema };

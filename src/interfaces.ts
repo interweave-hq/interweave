@@ -13,11 +13,20 @@ type ValidationOption<T> =
 			value: T;
 	  };
 
+export type FieldType =
+	| "string"
+	| "number"
+	| "boolean"
+	| "object"
+	| "date"
+	| "datetime"
+	| "time";
+
 export interface KeyConfiguration {
 	schema: {
 		// We need to expand this to support more DB types
 		// Coordinates, DateTime, Time, Float, Integer
-		type: "string" | "number" | "boolean" | "object";
+		type: FieldType;
 		is_optional?: boolean;
 		is_array?: boolean;
 		object_schema?: Schema;
