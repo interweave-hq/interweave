@@ -40,6 +40,33 @@ describe("Schema validator works correctly", () => {
 			];
 			expect(() => validateSchema(newSchema)).toThrowError();
 		});
+		// describe("ensure_present_if_key_equals", () => {
+		// 	test("value is array & target is array", () => {
+		// 		const newSchema = structuredClone(schema);
+		// 		newSchema.keys.first_name.validation!.ensure_empty_if_none_empty =
+		// 			["string"];
+		// 		expect(() => validateSchema(newSchema)).toThrowError();
+		// 	});
+		// 	test("value is string & target is string", () => {
+		// 		const newSchema = structuredClone(schema);
+		// 		newSchema.keys.first_name.validation!.ensure_empty_if_none_empty =
+		// 			["string"];
+		// 		expect(() => validateSchema(newSchema)).toThrowError();
+		// 	});
+		// 	test("value is string & target is array", () => {
+		// 		const newSchema = structuredClone(schema);
+		// 		newSchema.keys.first_name.validation!.ensure_empty_if_none_empty =
+		// 			["string"];
+		// 		expect(() => validateSchema(newSchema)).toThrowError();
+		// 	});
+		// 	test("value is array & target is array", () => {
+		// 		// Should be invalid
+		// 		const newSchema = structuredClone(schema);
+		// 		newSchema.keys.first_name.validation!.ensure_empty_if_none_empty =
+		// 			["string"];
+		// 		expect(() => validateSchema(newSchema)).toThrowError();
+		// 	});
+		// });
 	});
 	describe("validate string operations", () => {
 		test("validation.min fails", () => {

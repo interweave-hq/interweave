@@ -1,5 +1,6 @@
-import { isEmpty, isValuePresent } from "./helpers";
+import { arraysAreEqual, isEmpty, isValuePresent } from "./helpers";
 import { type Schema, type KeyConfiguration } from "./interfaces";
+import { get } from "./helpers";
 
 const throwError = (err: string) => {
 	throw new Error(`${err}`);
@@ -263,6 +264,16 @@ export function validateKeyConfiguration(
 		}
 	}
 
+	// Make sure value is an array if it was specified
+	const expectsArray = config.schema.is_array;
+	if (expectsArray) {
+		if (!Array.isArray(value)) {
+			error(
+				`Key '${key}' was specified as an array field, but an array was not received.`
+			);
+		}
+	}
+
 	if (config.validation) {
 		// Lets do our ensure present checks before possible returning on null | undefined
 		if (config.validation.ensure_present_if_all_present) {
@@ -344,21 +355,107 @@ export function validateKeyConfiguration(
 				);
 			}
 		}
+
+		// Make sure a key is present if some other key equals X value
+		if (config.validation.ensure_present_if_key_equals) {
+			const target = config.validation.ensure_present_if_key_equals;
+			const targetKey = target.key;
+			const targetValue = target.value;
+			const actualValue = get(fullValueObject, targetKey);
+			let conditionTrue = actualValue === targetValue;
+
+			const isActualArray = Array.isArray(actualValue);
+			const isTargetArray = Array.isArray(targetValue);
+
+			// Do a deep equality to make sure arrays are equal
+			if (isActualArray && isTargetArray) {
+				if (arraysAreEqual(targetValue, actualValue)) {
+					conditionTrue = true;
+				}
+			}
+
+			// This shouldn't happen and should get caught in the schema validator first
+			if (isActualArray && !isTargetArray) {
+				error(
+					`Invalid key configuration for key ${key} in field 'ensure_present_if_key_equals'. The returned`
+				);
+				// conditionTrue = true;
+			}
+
+			if (!isActualArray && isTargetArray) {
+				// @ts-expect-error
+				if (targetValue.includes(actualValue)) {
+					conditionTrue = true;
+				}
+			}
+
+			if (!isActualArray && !isTargetArray) {
+				if (targetValue === actualValue) {
+					conditionTrue = true;
+				}
+			}
+
+			if (conditionTrue) {
+				if (isEmpty(value)) {
+					error(
+						`${key} must have a value when ${targetKey} has a value of ${targetValue}`
+					);
+				}
+			}
+		}
+
+		// Make sure a key is present if some other key equals X value
+		if (config.validation.ensure_empty_if_key_equals) {
+			const target = config.validation.ensure_empty_if_key_equals;
+			const targetKey = target.key;
+			const targetValue = target.value;
+			const actualValue = get(fullValueObject, targetKey);
+			let conditionTrue = actualValue === targetValue;
+
+			const isActualArray = Array.isArray(actualValue);
+			const isTargetArray = Array.isArray(targetValue);
+
+			// Do a deep equality to make sure arrays are equal
+			if (isActualArray && isTargetArray) {
+				if (arraysAreEqual(targetValue, actualValue)) {
+					conditionTrue = true;
+				}
+			}
+
+			// This shouldn't happen and should get caught in the schema validator first
+			if (isActualArray && !isTargetArray) {
+				error(
+					`Invalid key configuration for key ${key} in field 'ensure_present_if_key_equals'. The returned`
+				);
+				// conditionTrue = true;
+			}
+
+			if (!isActualArray && isTargetArray) {
+				// @ts-expect-error
+				if (targetValue.includes(actualValue)) {
+					conditionTrue = true;
+				}
+			}
+
+			if (!isActualArray && !isTargetArray) {
+				if (targetValue === actualValue) {
+					conditionTrue = true;
+				}
+			}
+
+			if (conditionTrue) {
+				if (!isEmpty(value)) {
+					error(
+						`${key} must have a value when ${targetKey} has a value of ${targetValue}`
+					);
+				}
+			}
+		}
 	}
 
 	// If it's optional and not present, lets move on
 	if (config.schema.is_optional && isEmpty(value)) {
 		return true;
-	}
-
-	// Make sure value is an array if it was specified
-	const expectsArray = config.schema.is_array;
-	if (expectsArray) {
-		if (!Array.isArray(value)) {
-			error(
-				`Key '${key}' was specified as an array field, but no array was received.`
-			);
-		}
 	}
 
 	// Make sure value objects are configured correctly

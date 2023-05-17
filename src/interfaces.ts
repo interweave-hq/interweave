@@ -110,6 +110,28 @@ export interface KeyConfiguration {
 		ensure_empty_if_all_empty?: string[];
 		ensure_empty_if_any_empty?: string[];
 		ensure_empty_if_none_empty?: string[];
+		/**
+		 * Make sure this key is present if some other key equals X value
+		 * If key is an array value and array is supplied, it'll check equality of the arrays
+		 * If key is a non-array value and array is supplied, it'll check each of the values in the array
+		 * If key is an array value and a non-array value is supplied, invalid configuration
+		 * If key is a non-array value and a non-array is supplied, it'll check type and value equality
+		 */
+		ensure_present_if_key_equals?: {
+			key: string;
+			value?: string | number | boolean | string[] | number[];
+		};
+		/**
+		 * Make sure this key is empty if some other key equals X value
+		 * If key is an array value and array is supplied, it'll check equality of the arrays
+		 * If key is a non-array value and array is supplied, it'll check each of the values in the array
+		 * If key is an array value and a non-array value is supplied, invalid configuration
+		 * If key is a non-array value and a non-array is supplied, it'll check type and value equality
+		 */
+		ensure_empty_if_key_equals?: {
+			key: string;
+			value: string | number | boolean | string[] | number[];
+		};
 	};
 	/**
 	 * Define the user interface for this data
