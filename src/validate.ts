@@ -446,7 +446,7 @@ export function validateKeyConfiguration(
 			if (conditionTrue) {
 				if (!isEmpty(value)) {
 					error(
-						`${key} must have a value when ${targetKey} has a value of ${targetValue}`
+						`${key} must not have a value when ${targetKey} has a value of ${targetValue}`
 					);
 				}
 			}
