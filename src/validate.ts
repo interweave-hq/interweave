@@ -460,8 +460,23 @@ export function validateKeyConfiguration(
 
 	// Make sure value objects are configured correctly
 	const validArrayType = expectsArray && Array.isArray(value);
-	if (config.schema.type !== typeof value && !validArrayType) {
-		const schemaType = expectsArray ? "array" : config.schema.type;
+	const type = config.schema.type;
+	const schemaType = expectsArray ? "array" : config.schema.type;
+	// these all qualify as string types under the hood
+	if (
+		type === "string" ||
+		type === "date" ||
+		type === "time" ||
+		type === "datetime"
+	) {
+		if (typeof value !== "string" && !validArrayType) {
+			error(
+				`Key '${key}' was specified as type ${schemaType} but received ${
+					Array.isArray(value) ? "array" : typeof value
+				}.`
+			);
+		}
+	} else if (type !== typeof value && !validArrayType) {
 		// Handle config.schema saying array instad of object
 		error(
 			`Key '${key}' was specified as type ${schemaType} but received ${
