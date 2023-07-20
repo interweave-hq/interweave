@@ -11,7 +11,8 @@ const BUILD_INTERFACE_URL = ({ projectId }: { projectId: string }) =>
 export async function buildInterface(
 	key: string,
 	schema: Schema,
-	projectId: string
+	projectId: string,
+	apiToken: string
 ) {
 	// Validate configuration
 	validateSchema(schema);
@@ -26,6 +27,7 @@ export async function buildInterface(
 			}),
 			headers: {
 				"Content-Type": "application/json",
+				authorization: `Bearer ${apiToken}`,
 			},
 		});
 		const data = await res.json();
