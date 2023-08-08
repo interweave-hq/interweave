@@ -146,7 +146,7 @@ export interface KeyConfiguration {
 		 * Pre-defined interface elements
 		 * Can we expand to allow interface element type here?
 		 */
-		// component?: string;
+		// component?: "richtexteditor";
 		/**
 		 * Attributes to spread onto the element
 		 * Do we want this...?
