@@ -1,6 +1,8 @@
 import empty from "is-empty";
 
 export const isEmpty = (value: any) => {
+	// 0 isn't empty, can be a legitimate value for a submitted number
+	if (value === 0) return false;
 	return empty(value);
 };
 
