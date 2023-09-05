@@ -43,7 +43,7 @@ export type ExternalValidateOptions = Omit<ValidateOptions, "recursiveOpts">;
 
 export interface ErrorsReturnObject {
 	didError: boolean;
-	keys: {
+	fields: {
 		[key: string]: {
 			errors: string[];
 			requiredAndMissing?: boolean;
@@ -79,7 +79,7 @@ export function validate(
 		? opts.recursiveOpts.errorsObj
 		: {
 				didError: false,
-				keys: {},
+				fields: {},
 		  };
 
 	// Controls setting the errors in our store
@@ -102,15 +102,15 @@ export function validate(
 		errorsReturnObject.didError = true;
 
 		// Set to an object if the key doesn't have anything set yet
-		if (typeof errorsReturnObject.keys[key] !== "object") {
-			errorsReturnObject.keys[key] = {
+		if (typeof errorsReturnObject.fields[key] !== "object") {
+			errorsReturnObject.fields[key] = {
 				errors: [],
 				requiredAndMissing: false,
 			};
 		}
 		// Shorten access to path
 		// Can't move this above becuase we get yelled at for resetting a const
-		const fieldInErrorObject = errorsReturnObject.keys[key];
+		const fieldInErrorObject = errorsReturnObject.fields[key];
 
 		// Keep track of the missing required field
 		if (requiredAndMissing) {
