@@ -11,6 +11,7 @@ import {
 	type Parameter,
 	type StaticDataSource,
 	type FieldType,
+	type PrivacySetting,
 } from "./interfaces";
 import {
 	validate,
@@ -37,5 +38,6 @@ export {
 	type ErrorsReturnObject,
 	type StaticDataSource,
 	type FieldType,
+	type PrivacySetting,
 };
 export { buildInterface, validate, validateConfiguration, validateFields };

@@ -398,12 +398,7 @@ export interface InterfaceConfiguration {
 		 * DomainRestricted - anyone with the same organizational domain as you plus anyone inside users array
 		 * InviteRestricted - anyone inside users array
 		 */
-		privacy?:
-			| "Private"
-			| "Unlisted"
-			| "Public"
-			| "DomainRestricted"
-			| "InviteRestricted";
+		privacy?: PrivacySetting;
 		/**
 		 * Default permissions to those who have access
 		 */
@@ -470,6 +465,13 @@ export type Users = {
 }[];
 export type PermissionValue = "Create" | "Read" | "Update" | "Delete" | "All";
 export type Permissions = PermissionValue[];
+
+export type PrivacySetting =
+	| "Private"
+	| "Unlisted"
+	| "Public"
+	| "DomainRestricted"
+	| "InviteRestricted";
 
 export type StaticDataSource =
 	| string[]
