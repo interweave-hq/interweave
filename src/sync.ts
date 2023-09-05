@@ -42,6 +42,8 @@ export async function buildInterface(
 
 	// Push to API
 	try {
+		console.log("\n");
+		console.log(`⌛ Updating interface ${config.key}...`);
 		const res = await fetch(BUILD_INTERFACE_URL({ projectId: id }), {
 			method: "POST",
 			body: JSON.stringify({
@@ -59,8 +61,16 @@ export async function buildInterface(
 			);
 		} else {
 			console.log(
-				`❌ Update responded with a status of ${data.http_status}.`
+				`❌ ${config.key} update responded with a status of ${data.http_status}.`
 			);
+			if (data.error.user_facing_message) {
+				console.log(
+					`${config.key} - ${data.error.user_facing_message}`
+				);
+			}
+			if (data.error.technical_message) {
+				console.log(`${config.key} - ${data.error.technical_message}`);
+			}
 		}
 	} catch (err) {
 		console.log(err);
