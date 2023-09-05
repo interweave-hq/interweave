@@ -1,5 +1,5 @@
-import { type Schema } from "./interfaces";
-import { validateSchema } from "./validateSchema";
+import { type InterfaceConfiguration } from "./interfaces";
+import { validateConfiguration } from "./validateConfig";
 
 const API_URL = "https://api.interwv.com/api/v1/projects";
 const BUILD_INTERFACE_URL = ({ projectId }: { projectId: string }) =>
@@ -27,7 +27,7 @@ export async function buildInterface(
 	/**
 	 * Configuration object
 	 */
-	schema: Schema,
+	config: InterfaceConfiguration,
 	/**
 	 * id - Project ID
 	 * token - Project API Token from Interweave
@@ -38,17 +38,17 @@ export async function buildInterface(
 	const { id, token } = project;
 
 	// Validate configuration
-	validateSchema(schema);
+	validateConfiguration(config);
 
 	// Push to API
 	try {
 		const res = await fetch(BUILD_INTERFACE_URL({ projectId: id }), {
 			method: "POST",
 			body: JSON.stringify({
-				key: schema.slug,
-				schema_config: schema,
-				title: schema.title,
-				description: schema.description,
+				key: config.key,
+				schema_config: config,
+				title: config.title,
+				description: config.description,
 			}),
 			headers: {
 				"Content-Type": "application/json",

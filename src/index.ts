@@ -1,9 +1,9 @@
 import {
-	type Schema,
-	type KeyConfiguration,
+	type InterfaceConfiguration,
+	type FieldConfiguration,
 	type Request,
 	type Error,
-	type SchemaKeys,
+	type Fields,
 	type Permissions,
 	type PermissionValue,
 	type Users,
@@ -17,16 +17,16 @@ import {
 	type ExternalValidateOptions as ValidateOptions,
 	type ErrorsReturnObject,
 } from "./validate";
-import { validateSchema } from "./validateSchema";
+import { validateConfiguration, validateFields } from "./validateConfig";
 import { buildInterface } from "./sync";
 
 export {
 	// From interfaces
-	type Schema,
-	type KeyConfiguration,
+	type InterfaceConfiguration,
+	type FieldConfiguration,
 	type Request,
 	type Error,
-	type SchemaKeys,
+	type Fields,
 	type Permissions,
 	type PermissionValue,
 	type Users,
@@ -38,4 +38,4 @@ export {
 	type StaticDataSource,
 	type FieldType,
 };
-export { buildInterface, validate, validateSchema };
+export { buildInterface, validate, validateConfiguration, validateFields };

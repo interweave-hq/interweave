@@ -1,5 +1,9 @@
-import { type Schema, type KeyConfiguration } from "./interfaces";
-import { validateKeyConfiguration } from "./validate";
+import {
+	InterfaceConfiguration,
+	type FieldConfiguration,
+	type Fields,
+} from "./interfaces";
+import { validateFieldValue } from "./validate";
 
 const throwError = (err: string) => {
 	throw new Error(`${err}`);
@@ -57,10 +61,22 @@ function fieldMustBeSet(
 /**
  * Recursively traverse an object's keys and ensure each is okay
  */
-export function validateSchema(schema: Schema) {
+export function validateConfiguration(config: InterfaceConfiguration) {
+	// Extra checks on access, authentication, key, title, description
+	// ...
+
 	// Loop through each key and validate its schema
-	for (const [k, keySchema] of Object.entries(schema.keys)) {
-		validateKeySchema(k, keySchema);
+	validateFields(config.fields);
+	return true;
+}
+
+/**
+ * Recursively traverse an object's fields and ensure each is okay
+ */
+export function validateFields(fields: Fields) {
+	// Loop through each key and validate its schema
+	for (const [fieldName, fieldConfiguration] of Object.entries(fields)) {
+		validateFieldConfiguration(fieldName, fieldConfiguration);
 	}
 	return true;
 }
@@ -68,7 +84,7 @@ export function validateSchema(schema: Schema) {
 /**
  * Function we can check a keys configuration object
  */
-function validateKeySchema(key: string, config: KeyConfiguration) {
+function validateFieldConfiguration(key: string, config: FieldConfiguration) {
 	const { schema, validation } = config;
 
 	// Lets set the key so we don't have to keep doing it
@@ -135,7 +151,7 @@ function validateKeySchema(key: string, config: KeyConfiguration) {
 	if (schema.type === "object") {
 		// Check recursive fields inside the nested Schema
 		if (schema.object_schema) {
-			validateSchema(schema.object_schema);
+			validateFields(schema.object_schema);
 		}
 		const reason = "if schema.type is number";
 		ensureFieldNotSet("schema.enum", schema?.enum, reason);
@@ -158,7 +174,7 @@ function validateKeySchema(key: string, config: KeyConfiguration) {
 
 	// Let's make sure the default value obeys our rules
 	if (schema.default_value) {
-		validateKeyConfiguration(key, schema.default_value, config, {});
+		validateFieldValue(key, schema.default_value, config, {});
 	}
 
 	// length, min_length, and max_length only available on strings and arrays

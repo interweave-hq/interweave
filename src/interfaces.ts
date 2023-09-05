@@ -22,14 +22,14 @@ export type FieldType =
 	| "datetime"
 	| "time";
 
-export interface KeyConfiguration {
+export interface FieldConfiguration {
 	schema: {
 		// We need to expand this to support more DB types
 		// Coordinates, DateTime, Time, Float, Integer
 		type: FieldType;
 		is_optional?: boolean;
 		is_array?: boolean;
-		object_schema?: Schema;
+		object_schema?: Fields;
 		// These can be done by hand for now
 		// extend?: KeyConfiguration;
 		// omit?: string[];
@@ -344,15 +344,17 @@ export interface Parameter {
 	};
 }
 
-export interface SchemaKeys {
-	[key: string]: KeyConfiguration;
+export interface Fields {
+	[key: string]: FieldConfiguration;
 }
 
-export interface Schema {
+export interface InterfaceConfiguration {
 	/**
 	 * Unique identifier for this interface
+	 * Will render as the slug
+	 * Must be lowercase-kebab-slug-style
 	 */
-	slug: string;
+	key: string;
 	/**
 	 * Display name for this interface
 	 */
@@ -368,7 +370,7 @@ export interface Schema {
 	/**
 	 * Properties from your data model
 	 */
-	keys: SchemaKeys;
+	fields: Fields;
 	/**
 	 * Instructions for utilizing this data via the API
 	 */

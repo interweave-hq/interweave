@@ -1,5 +1,9 @@
 import { arraysAreEqual, isEmpty, isValuePresent } from "./helpers";
-import { type Schema, type KeyConfiguration } from "./interfaces";
+import {
+	InterfaceConfiguration,
+	type FieldConfiguration,
+	type Fields,
+} from "./interfaces";
 import { get } from "./helpers";
 
 const throwError = (err: string) => {
@@ -31,9 +35,9 @@ interface ValidateOptions {
 		path?: string;
 	};
 	/**
-	 * Schema object to assist with
+	 * Fields object to assist with
 	 */
-	fullSchema?: Schema;
+	allFields?: Fields;
 }
 export type ExternalValidateOptions = Omit<ValidateOptions, "recursiveOpts">;
 
@@ -47,19 +51,23 @@ export interface ErrorsReturnObject {
 	};
 }
 
-// obj will be the object we're testing
-// schema will be the schema we're testing against
+/**
+ * Validate a new object against your configuration
+ * obj = the object we're testing
+ * configuration = the Interface Configuration we're testing against
+ */
 export function validate(
-	obj: { [key: string]: any },
-	schema: Schema,
+	obj: Record<any, unknown>,
+	configuration: InterfaceConfiguration,
 	opts?: ValidateOptions
 ) {
-	const schemaKeys = Object.keys(schema.keys);
+	const fields = configuration.fields;
+	const schemaKeys = Object.keys(fields);
 	const requiredKeys = schemaKeys.filter(
 		(k) =>
-			!schema.keys[k].schema.is_optional &&
+			!fields[k].schema.is_optional &&
 			// Hiding the form element disables validation
-			!schema.keys[k].interface?.form?.hidden
+			!fields[k].interface?.form?.hidden
 	);
 	const objectKeys = Object.keys(obj);
 
@@ -129,7 +137,7 @@ export function validate(
 		const val = obj[k];
 		if (isEmpty(val)) {
 			// Check to make sure if there is an outKey specified, and that there is a value present
-			const potentialOutKey = schema.keys[k].interface?.form?.out_key;
+			const potentialOutKey = fields[k].interface?.form?.out_key;
 			if (potentialOutKey) {
 				const newVal = obj[potentialOutKey];
 				if (!isEmpty(newVal)) {
@@ -158,7 +166,7 @@ export function validate(
 	// Validate each key and its value
 	objectKeys.forEach((k) => {
 		let outKey = null;
-		let schemaConfig = schema.keys[k];
+		let schemaConfig = fields[k];
 
 		/**
 		 * Target key is how we handle nested keys so we can give a proper error
@@ -176,20 +184,20 @@ export function validate(
 		 */
 		if (!schemaConfig) {
 			// If you can't find the key config, look for the outKey
-			const keysArr = Object.keys(schema.keys);
-			const correctKey = keysArr.find(
-				(k) => schema.keys[k].interface?.form?.out_key === k
+			const fieldsArr = Object.keys(fields);
+			const correctKey = fieldsArr.find(
+				(k) => fields[k].interface?.form?.out_key === k
 			);
 			if (!correctKey) {
 				return;
 			}
-			outKey = schema.keys[correctKey].interface?.form?.out_key;
-			schemaConfig = schema.keys[correctKey];
+			outKey = fields[correctKey].interface?.form?.out_key;
+			schemaConfig = fields[correctKey];
 		}
 
 		const value = outKey ? obj[outKey] : obj[k];
 
-		validateKeyConfiguration(
+		validateFieldValue(
 			/**
 			 * Target key will be the name / key
 			 */
@@ -240,10 +248,10 @@ interface ValidateKeyConfigurationOptions {
  * NOT the supplied configuration
  * at this point we assume the configuration is correct
  */
-export function validateKeyConfiguration(
+export function validateFieldValue(
 	key: string,
 	value: any,
-	config: KeyConfiguration,
+	config: FieldConfiguration,
 	fullValueObject: Record<string, unknown>,
 	opts?: ValidateKeyConfigurationOptions
 ) {
@@ -255,7 +263,7 @@ export function validateKeyConfiguration(
 		return true;
 	}
 
-	// Make sure required keys have a value
+	// Make sure required fields have a value
 	if (!config.schema.is_optional) {
 		if (value === null || value === undefined || value === "") {
 			error(
@@ -491,14 +499,21 @@ export function validateKeyConfiguration(
 		const path = opts?.recursiveOpts?.path
 			? `${opts?.recursiveOpts?.path}.${key}`
 			: key;
-		validate(value, config.schema.object_schema!, {
-			recursiveOpts: {
-				path,
-				errorsObj: opts?.recursiveOpts?.errorsObj,
-			},
-			returnErrors: true,
-			fullValueObject: fullValueObject,
-		});
+		validate(
+			value,
+			// object_schema is type Fields, but we do this recursively
+			// This validate() function doesn't need the other fields, but feels better API-wise
+			// So this cast has no real impact, but gets things working
+			config.schema.object_schema as unknown as InterfaceConfiguration,
+			{
+				recursiveOpts: {
+					path,
+					errorsObj: opts?.recursiveOpts?.errorsObj,
+				},
+				returnErrors: true,
+				fullValueObject: fullValueObject,
+			}
+		);
 	}
 
 	// Make sure value is part of the enum if supplied
