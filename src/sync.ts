@@ -45,10 +45,7 @@ export async function buildInterface(
 		const res = await fetch(BUILD_INTERFACE_URL({ projectId: id }), {
 			method: "POST",
 			body: JSON.stringify({
-				key: config.key,
 				schema_config: config,
-				title: config.title,
-				description: config.description,
 			}),
 			headers: {
 				"Content-Type": "application/json",
@@ -56,7 +53,15 @@ export async function buildInterface(
 			},
 		});
 		const data = await res.json();
-		console.log(`Update responded with a status of ${data.http_status}.`);
+		if (res.status < 399) {
+			console.log(
+				`✅ Update responded with a status of ${data.http_status}.`
+			);
+		} else {
+			console.log(
+				`❌ Update responded with a status of ${data.http_status}.`
+			);
+		}
 	} catch (err) {
 		console.log(err);
 	}
