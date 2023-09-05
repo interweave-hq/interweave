@@ -18,7 +18,7 @@ interface BuildInterfaceProjectProps {
 	/**
 	 * Interweave Project ID
 	 */
-	id: string;
+	projectId: string;
 	/**
 	 * Interweave API Token for this project
 	 */
@@ -46,7 +46,7 @@ export async function buildInterface(
 		apiUrl?: string;
 	}
 ) {
-	const { id, token } = project;
+	const { projectId, token } = project;
 	const apiUrl = options?.apiUrl;
 
 	// Validate configuration
@@ -56,19 +56,16 @@ export async function buildInterface(
 	try {
 		console.log("\n");
 		console.log(`⌛ Updating interface ${config.key}...`);
-		const res = await fetch(
-			BUILD_INTERFACE_URL({ projectId: id, apiUrl }),
-			{
-				method: "POST",
-				body: JSON.stringify({
-					schema_config: config,
-				}),
-				headers: {
-					"Content-Type": "application/json",
-					authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const res = await fetch(BUILD_INTERFACE_URL({ projectId, apiUrl }), {
+			method: "POST",
+			body: JSON.stringify({
+				schema_config: config,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+				authorization: `Bearer ${token}`,
+			},
+		});
 		const data = await res.json();
 		if (res.status < 399) {
 			console.log(
