@@ -349,6 +349,25 @@ export interface SchemaKeys {
 }
 
 export interface Schema {
+	/**
+	 * Unique identifier for this interface
+	 */
+	slug: string;
+	/**
+	 * Display name for this interface
+	 */
+	title?: string;
+	/**
+	 * Additional information to describe this interface
+	 */
+	description?: string;
+	/**
+	 * How usage of this interface should be billed. Default: "Individual"
+	 */
+	billing_strategy?: "InterfaceOwner" | "Individual";
+	/**
+	 * Properties from your data model
+	 */
 	keys: SchemaKeys;
 	/**
 	 * Instructions for utilizing this data via the API

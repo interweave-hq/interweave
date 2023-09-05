@@ -5,60 +5,54 @@ const API_URL = "https://api.interwv.com/api/v1/projects";
 const BUILD_INTERFACE_URL = ({ projectId }: { projectId: string }) =>
 	`${API_URL}/${projectId}/interfaces`;
 
-interface BuildInterfaceProps {
-	/**
-	 * Unique key to identify this interface
-	 */
-	key: string;
-	/**
-	 * Configuration object
-	 */
-	schema: Schema;
+/**
+ * id - Project ID
+ * token - Project API Token from Interweave
+ */
+interface BuildInterfaceProjectProps {
 	/**
 	 * Interweave Project ID
 	 */
-	projectId: string;
+	id: string;
 	/**
-	 * Interweave API Token
+	 * Interweave API Token for this project
 	 */
-	apiToken: string;
-	/**
-	 * Title for this interface
-	 */
-	title?: string;
-	/**
-	 * Description for this interface
-	 */
-	description?: string;
+	token: string;
 }
 
 /**
  * This will upload your schema configuration to the Studio
  */
-export async function buildInterface({
-	key,
-	schema,
-	projectId,
-	apiToken,
-	title,
-	description,
-}: BuildInterfaceProps) {
+export async function buildInterface(
+	/**
+	 * Configuration object
+	 */
+	schema: Schema,
+	/**
+	 * id - Project ID
+	 * token - Project API Token from Interweave
+	 * { id, token }
+	 */
+	project: BuildInterfaceProjectProps
+) {
+	const { id, token } = project;
+
 	// Validate configuration
 	validateSchema(schema);
 
 	// Push to API
 	try {
-		const res = await fetch(BUILD_INTERFACE_URL({ projectId }), {
+		const res = await fetch(BUILD_INTERFACE_URL({ projectId: id }), {
 			method: "POST",
 			body: JSON.stringify({
-				key,
+				key: schema.slug,
 				schema_config: schema,
-				title,
-				description,
+				title: schema.title,
+				description: schema.description,
 			}),
 			headers: {
 				"Content-Type": "application/json",
-				authorization: `Bearer ${apiToken}`,
+				authorization: `Bearer ${token}`,
 			},
 		});
 		const data = await res.json();
