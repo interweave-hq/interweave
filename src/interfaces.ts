@@ -353,12 +353,17 @@ export interface InterfaceConfiguration {
 	 * Unique identifier for this interface
 	 * Will render as the slug
 	 * Must be lowercase-kebab-slug-style
+	 * CANNOT BE CHANGED AFTER CREATION
 	 */
 	key: string;
 	/**
 	 * Display name for this interface
 	 */
 	title?: string;
+	/**
+	 * Slug for this interface
+	 */
+	slug?: string;
 	/**
 	 * Additional information to describe this interface
 	 */
