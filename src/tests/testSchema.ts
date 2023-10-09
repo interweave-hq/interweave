@@ -15,6 +15,7 @@ export const config: InterfaceConfiguration = {
 		first_name: {
 			schema: {
 				type: "string",
+				default_value: "hi",
 			},
 			validation: {
 				min_length: 3,
