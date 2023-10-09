@@ -19,7 +19,7 @@ import {
 	type ErrorsReturnObject,
 } from "./validate";
 import { validateConfiguration, validateFields } from "./validateConfig";
-import { buildInterface } from "./sync";
+import { buildInterface, type BuildInterfaceProject } from "./sync";
 
 export {
 	// From interfaces
@@ -39,5 +39,6 @@ export {
 	type StaticDataSource,
 	type FieldType,
 	type PrivacySetting,
+	type BuildInterfaceProject,
 };
 export { buildInterface, validate, validateConfiguration, validateFields };

@@ -4,17 +4,17 @@ import { validateConfiguration } from "./validateConfig";
 const API_URL = "https://api.interwv.com";
 const BUILD_INTERFACE_URL = ({
 	projectId,
-	apiUrl = API_URL,
+	apiDomain = API_URL,
 }: {
 	projectId: string;
-	apiUrl?: string;
-}) => `${apiUrl}/api/v1/projects/${projectId}/interfaces`;
+	apiDomain?: string;
+}) => `${apiDomain}/api/v1/projects/${projectId}/interfaces`;
 
 /**
  * id - Project ID
  * token - Project API Token from Interweave
  */
-interface BuildInterfaceProjectProps {
+export interface BuildInterfaceProject {
 	/**
 	 * Interweave Project ID
 	 */
@@ -38,16 +38,16 @@ export async function buildInterface(
 	 * token - Project API Token from Interweave
 	 * { id, token }
 	 */
-	project: BuildInterfaceProjectProps,
+	project: BuildInterfaceProject,
 	/**
 	 * Additional options
 	 */
 	options?: {
-		apiUrl?: string;
+		apiDomain?: string;
 	}
 ) {
 	const { projectId, token } = project;
-	const apiUrl = options?.apiUrl;
+	const apiDomain = options?.apiDomain;
 
 	// Validate configuration
 	validateConfiguration(config);
@@ -56,7 +56,7 @@ export async function buildInterface(
 	try {
 		console.log("\n");
 		console.log(`⌛ Updating interface ${config.key}...`);
-		const res = await fetch(BUILD_INTERFACE_URL({ projectId, apiUrl }), {
+		const res = await fetch(BUILD_INTERFACE_URL({ projectId, apiDomain }), {
 			method: "POST",
 			body: JSON.stringify({
 				schema_config: config,
