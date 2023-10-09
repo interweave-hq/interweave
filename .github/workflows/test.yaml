@@ -19,16 +19,7 @@ jobs:
                   node-version: 18
 
             - name: Install dependencies
-              run: npm install
+              run: npm ci
 
             - name: Run tests
-              run: npm test
-
-            - name: Check for test failures
-              run: |
-                  if [ -f test-results.xml ]; then
-                    echo "Found test results"
-                  else
-                    echo "No test results found"
-                    exit 1
-                  fi
+              run: npm run test
