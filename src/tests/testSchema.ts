@@ -1,7 +1,8 @@
-import { type Schema } from "../interfaces";
+import { type InterfaceConfiguration } from "../interfaces";
 
-export const schema: Schema = {
-	keys: {
+export const config: InterfaceConfiguration = {
+	key: "interface-key",
+	fields: {
 		phone: {
 			schema: {
 				is_optional: true,
@@ -68,27 +69,25 @@ export const schema: Schema = {
 			schema: {
 				type: "object",
 				object_schema: {
-					keys: {
-						street_line_1: {
-							schema: {
-								type: "string",
-							},
+					street_line_1: {
+						schema: {
+							type: "string",
 						},
-						street_line_2: {
-							schema: {
-								type: "string",
-								is_optional: true,
-							},
-							validation: {
-								ensure_present_if_any_present: [
-									"address.street_line_1",
-								],
-							},
+					},
+					street_line_2: {
+						schema: {
+							type: "string",
+							is_optional: true,
 						},
-						zip: {
-							schema: {
-								type: "number",
-							},
+						validation: {
+							ensure_present_if_any_present: [
+								"address.street_line_1",
+							],
+						},
+					},
+					zip: {
+						schema: {
+							type: "number",
 						},
 					},
 				},

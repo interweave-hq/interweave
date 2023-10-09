@@ -325,23 +325,6 @@ export interface Parameter {
 			disabled?: boolean;
 		};
 	};
-
-	options?: {
-		/**
-		 * The source of the data
-		 */
-		data: DataSource;
-		/**
-		 * The unique identifier per entry
-		 * Useful if the data is an array of objects
-		 */
-		value_path?: string;
-		/**
-		 * The label to display in a dropdown
-		 * Useful if the data is an array of objects
-		 */
-		label_path?: string;
-	};
 }
 
 export interface Fields {
